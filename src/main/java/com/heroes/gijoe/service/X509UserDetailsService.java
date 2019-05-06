@@ -1,10 +1,12 @@
 package com.heroes.gijoe.service;
 
 import java.security.cert.X509Certificate;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,13 +37,15 @@ public class X509UserDetailsService implements AuthenticationUserDetailsService<
 	public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken token) throws UsernameNotFoundException {
 		// TODO Auto-generated method stub
 		System.out.println("loadUserDetails by token");
-		List<GrantedAuthority> USER_AUTHORITIES 
-	     = AuthorityUtils.commaSeparatedStringToAuthorityList(
-	     "USER");
+//		List<GrantedAuthority> authorities 
+//	     = AuthorityUtils.commaSeparatedStringToAuthorityList(
+//	     "READ_AUTHORITY");
+		 final List<SimpleGrantedAuthority> authorities = new LinkedList<>();
+		 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 		X509Certificate cert = (X509Certificate)token.getCredentials();
-		User user = new User(cert.getSubjectDN().getName(), "", USER_AUTHORITIES);
-		throw new ClientDNMissingAuthenticationException("error");
-//		return user;
+		User user = new User(cert.getSubjectDN().getName(), "", authorities);
+//		throw new UsernameNotFoundException("error");
+		return user;
 	}
 
 }

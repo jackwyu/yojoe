@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
@@ -26,6 +27,8 @@ public class X509AuthenticationConfiguration extends WebSecurityConfigurerAdapte
 	private X509AccessDeniedHandler x509AccessDeniedHandler;
 	@Override
 	protected void configure(HttpSecurity http) throws Exception{
+		http.addFilterBefore(exceptionTranslationFilter(), ExceptionTranslationFilter.class);
+		
 		http.sessionManagement()
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 		.and()
@@ -36,11 +39,18 @@ public class X509AuthenticationConfiguration extends WebSecurityConfigurerAdapte
 		.x509()
 		.authenticationUserDetailsService(userDetailsService)
 		.and()
-		.exceptionHandling()
-		.authenticationEntryPoint(new BasicAuthAuthenticationEntryPoint())
+		.formLogin()
+		.successHandler(new SuccessHandler())
+//		.and()
+//		.exceptionHandling()
+//		.authenticationEntryPoint(new BasicAuthAuthenticationEntryPoint())
 		.and()
 		.addFilterBefore(new CustomX509Filter(), X509AuthenticationFilter.class)
 		;
+		
+//		 http.exceptionHandling()
+//         .authenticationEntryPoint(new BasicAuthAuthenticationEntryPoint());
+
 	}
 	
 	@Override
@@ -52,4 +62,13 @@ public class X509AuthenticationConfiguration extends WebSecurityConfigurerAdapte
 	public X509AccessDeniedHandler accessDeniedHandler(){
 	    return new X509AccessDeniedHandler();
 	}
+	
+    @Bean
+    public static ExceptionTranslationFilter exceptionTranslationFilter() {
+        RestExceptionTranslationFilter exceptionTranslationFilter = new RestExceptionTranslationFilter(new BasicAuthAuthenticationEntryPoint());
+//        RestAccessDeniedHandler accessDeniedHandlerImpl = new RestAccessDeniedHandler();
+//        exceptionTranslationFilter.setAccessDeniedHandler(accessDeniedHandlerImpl);
+        exceptionTranslationFilter.afterPropertiesSet();
+        return exceptionTranslationFilter;
+    }
 }
